@@ -29,15 +29,23 @@
   text-align: right;
 }
 
-/* Fix for math equations in RTL context */
+/* Fix for math equations and code blocks in RTL context */
 [dir="rtl"] .katex {
   direction: ltr;
   display: inline-block;
 }
 
-/* Ensure numbers still display correctly */
-[dir="rtl"] .katex,
-[dir="rtl"] code {
+/* Ensure code blocks display correctly */
+[dir="rtl"] pre,
+[dir="rtl"] code,
+[dir="rtl"] .highlighter-rouge div.highlight {
   direction: ltr;
+  text-align: left;
   unicode-bidi: embed;
-} 
+}
+
+/* Fix code block container alignment */
+[dir="rtl"] div.highlighter-rouge {
+  direction: rtl;
+  text-align: left;
+}
