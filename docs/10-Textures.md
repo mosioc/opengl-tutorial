@@ -94,6 +94,21 @@ glGenerateMipmap(GL_TEXTURE_2D);
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 ```
 
+## فرمت‌های بافت
+
+OpenGL از انواع مختلفی از فرمت‌های بافت پشتیبانی می‌کند:
+
+- **GL_RGB**: سه کانال رنگی R, G, B
+- **GL_RGBA**: چهار کانال R, G, B, A (آلفا برای شفافیت)
+- **GL_RED**: فقط کانال قرمز
+- **GL_DEPTH_COMPONENT**: برای بافت‌های عمق
+- و فرمت‌های بیشتر...
+
+```cpp
+// برای یک تصویر RGBA (با کانال آلفا)
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+```
+
 ## چند بافتی (Multiple Textures)
 
 شما می‌توانید چندین بافت را همزمان در یک شیدر استفاده کنید:
