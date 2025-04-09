@@ -21,9 +21,24 @@ layout: persian
   - ایجاد محیط‌های واقعی‌تر
 
 ### 2. مختصات بافت (Texture Coordinates)
+برای اعمال یک بافت روی یک شکل، هر رأس به یک مختصات بافت نیاز دارد که تعیین می‌کند چه بخشی از بافت به آن رأس اختصاص داده شود.
 - **محدوده**: از (0,0) تا (1,1)
 - **نام‌گذاری**: معمولاً با s و t یا u و v نمایش داده می‌شوند
 - **نقشه‌برداری**: ارتباط بین مختصات بافت و مختصات سه‌بعدی
+=> نکته‌های اضافی:
+- (0, 0) گوشه پایین چپ تصویر است.
+- (1, 1) گوشه بالا راست تصویر است.
+
+```
+(0,1)          (1,1)
+   +-------------+
+   |             |
+   |             |
+   |             |
+   |             |
+   +-------------+
+(0,0)          (1,0)
+```
 
 ### 3. پارامترهای بافت
 - **فیلترینگ**: نحوه نمایش بافت در مقیاس‌های مختلف
@@ -31,6 +46,81 @@ layout: persian
   - **مگنیفیکیشن**: افزایش اندازه بافت
 - **تکرار**: نحوه تکرار بافت در سطوح بزرگتر
 - **حاشیه**: نحوه رفتار بافت در لبه‌های شیء
+
+
+#### مثال و جزئیات دقیق از پارامترهای بافت
+
+### حالت‌های Wrapping
+
+تعیین می‌کنند وقتی مختصات بافت خارج از محدوده [0,1] هستند، چه اتفاقی می‌افتد:
+
+- **GL_REPEAT**: تکرار بافت (پیش‌فرض)
+- **GL_MIRRORED_REPEAT**: تکرار آینه‌ای بافت
+- **GL_CLAMP_TO_EDGE**: مختصات به نزدیک‌ترین لبه محدود می‌شوند
+- **GL_CLAMP_TO_BORDER**: از رنگ حاشیه تعیین شده استفاده می‌شود
+
+```cpp
+// تنظیم حالت wrapping برای محورهای S و T
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+// تنظیم رنگ حاشیه اگر از GL_CLAMP_TO_BORDER استفاده می‌کنید
+float borderColor[] = { 1.0f, 1.0f, 0.0f, 1.0f };
+glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+```
+
+### فیلترینگ بافت
+
+تعیین می‌کند وقتی بافت بزرگ‌تر یا کوچک‌تر از سایز اصلی نمایش داده می‌شود، چگونه نمونه‌برداری شود:
+
+- **GL_NEAREST**: نزدیک‌ترین تکسل را انتخاب می‌کند (پیکسلی)
+- **GL_LINEAR**: میانگین وزن‌دار تکسل‌های مجاور (نرم‌تر)
+
+```cpp
+// تنظیم فیلتر برای کوچک‌نمایی و بزرگ‌نمایی
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+```
+
+### میپ‌مپ (Mipmaps)
+
+نسخه‌های کوچک‌تر از بافت اصلی که برای سطوح مختلف جزئیات استفاده می‌شوند:
+
+```cpp
+// ایجاد خودکار میپ‌مپ‌ها
+glGenerateMipmap(GL_TEXTURE_2D);
+
+// تنظیم فیلتر میپ‌مپ
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+```
+
+## چند بافتی (Multiple Textures)
+
+شما می‌توانید چندین بافت را همزمان در یک شیدر استفاده کنید:
+
+```cpp
+// فعال کردن واحدهای بافت
+glActiveTexture(GL_TEXTURE0);
+glBindTexture(GL_TEXTURE_2D, texture1);
+glActiveTexture(GL_TEXTURE1);
+glBindTexture(GL_TEXTURE_2D, texture2);
+
+// تنظیم uniform در شیدر
+glUniform1i(glGetUniformLocation(shaderProgram, "texture1"), 0);
+glUniform1i(glGetUniformLocation(shaderProgram, "texture2"), 1);
+```
+
+و در شیدر فرگمنت:
+
+```glsl
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+
+void main()
+{
+    FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.2);
+}
+```
 
 ## پیاده‌سازی بافت‌دهی در OpenGL
 
