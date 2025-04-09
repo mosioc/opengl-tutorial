@@ -1,13 +1,13 @@
 ---
-title: شیدرها
+title: شیدرها و بافرها
 nav_order: 9
 permalink: /shaders/
 layout: persian
 ---
 
- # شیدرها در OpenGL
+ # شیدرها و بافرها در OpenGL
 
-## مقدمه
+## مقدمه‌ای بر شیدرها
 شیدرها برنامه‌های کوچکی هستند که روی GPU اجرا می‌شوند و نحوه پردازش رئوس و پیکسل‌ها را در OpenGL کنترل می‌کنند. در این بخش، با مفاهیم پایه شیدرها و نحوه استفاده از آنها در OpenGL آشنا می‌شویم. این برنامه‌ها به زبان GLSL (OpenGL Shading Language) نوشته می‌شوند و به شما امکان می‌دهند تا کنترل دقیقی روی پایپلاین رندرینگ داشته باشید.
 
 ## انواع اصلی شیدرها
@@ -514,11 +514,307 @@ void main() {
 3. **استفاده از توابع داخلی**: توابع داخلی GLSL معمولاً در سخت‌افزار بهینه‌سازی شده‌اند.
 4. **پیش‌محاسبه مقادیر ثابت**: در صورت امکان، مقادیر ثابت را از CPU ارسال کنید.
 
-## نکات مهم
+## نکات مهم شیدرها
 1. همیشه خطاهای کامپایل و لینک شیدرها را بررسی کنید
 2. از متغیرهای یکنواخت برای انتقال داده‌ها به شیدرها استفاده کنید
 3. برای عملکرد بهتر، از حداقل تعداد متغیرهای یکنواخت استفاده کنید
 4. برای اشکال‌زدایی شیدرها، از توابع `glGetShaderInfoLog` و `glGetProgramInfoLog` استفاده کنید
+
+
+# بافرها و آرایه‌های رأس در OpenGL
+
+## مقدمه‌ای بر بافرها
+
+برای رندر کردن هر چیزی در OpenGL، باید داده‌های آن را به GPU منتقل کنیم. بافرها مکانیزم اصلی برای این انتقال هستند. در این‌جا، با سه نوع اصلی بافر آشنا می‌شویم:
+
+1. **VBO (Vertex Buffer Object)**: برای ذخیره داده‌های رأس
+2. **VAO (Vertex Array Object)**: برای ذخیره تنظیمات ویژگی‌های رأس
+3. **EBO/IBO (Element Buffer Object/Index Buffer Object)**: برای ذخیره شاخص‌های رأس
+
+## VBO (Vertex Buffer Object)
+
+VBO یک بافر OpenGL است که داده‌های رأس مانند موقعیت، رنگ، مختصات بافت و... را ذخیره می‌کند.
+
+### ایجاد و استفاده از VBO
+
+```cpp
+// ایجاد یک شناسه برای VBO
+unsigned int VBO;
+glGenBuffers(1, &VBO);
+
+// فعال کردن بافر
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+// تعریف داده‌های رأس (در این مثال یک مثلث)
+float vertices[] = {
+    // موقعیت (x, y, z)    // رنگ (r, g, b)
+    -0.5f, -0.5f, 0.0f,    1.0f, 0.0f, 0.0f,  // رأس پایین چپ
+     0.5f, -0.5f, 0.0f,    0.0f, 1.0f, 0.0f,  // رأس پایین راست
+     0.0f,  0.5f, 0.0f,    0.0f, 0.0f, 1.0f   // رأس بالا
+};
+
+// کپی داده‌های رأس به بافر
+glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+```
+
+### پارامترهای glBufferData
+
+- **GL_STATIC_DRAW**: داده‌ها یک بار تنظیم شده و بارها استفاده می‌شوند.
+- **GL_DYNAMIC_DRAW**: داده‌ها چندین بار تغییر کرده و بارها استفاده می‌شوند.
+- **GL_STREAM_DRAW**: داده‌ها هر فریم تغییر می‌کنند.
+
+## VAO (Vertex Array Object)
+
+VAO یک شیء در OpenGL است که تمام تنظیمات مربوط به ورودی‌های رأس را ذخیره می‌کند. استفاده از VAO فرآیند رندرینگ را ساده‌تر می‌کند، زیرا نیازی به تنظیم مجدد ویژگی‌های رأس نیست.
+
+### ایجاد و استفاده از VAO
+
+```cpp
+// ایجاد یک شناسه برای VAO
+unsigned int VAO;
+glGenVertexArrays(1, &VAO);
+
+// فعال کردن VAO
+glBindVertexArray(VAO);
+
+// اکنون VBO را بایند کنید و ویژگی‌های رأس را تنظیم کنید
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+// تنظیم ویژگی موقعیت (attribute 0)
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+glEnableVertexAttribArray(0);
+
+// تنظیم ویژگی رنگ (attribute 1)
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+glEnableVertexAttribArray(1);
+
+// غیرفعال کردن VAO (اختیاری)
+glBindVertexArray(0);
+```
+
+### توضیح پارامترهای glVertexAttribPointer
+
+1. **شماره ویژگی**: باید با شماره ویژگی در شیدر مطابقت داشته باشد.
+2. **اندازه**: تعداد مؤلفه‌های هر ویژگی (مثلاً 3 برای xyz).
+3. **نوع**: نوع داده‌ها (GL_FLOAT، GL_INT و...).
+4. **عادی‌سازی**: آیا داده‌ها باید عادی‌سازی شوند؟
+5. **stride**: فاصله بین ویژگی‌های متوالی (به بایت).
+6. **offset**: جابجایی شروع ویژگی در بافر (به بایت).
+
+## EBO/IBO (Element Buffer Object/Index Buffer Object)
+
+EBO یک بافر OpenGL است که شاخص‌های رئوس را ذخیره می‌کند. اجازه می‌دهد رئوس را یک بار تعریف کنید و با شاخص‌ها به آن‌ها مراجعه کنید، که به معنای صرفه‌جویی در حافظه است.
+
+### ایجاد و استفاده از EBO
+
+```cpp
+// تعریف داده‌های رأس برای یک مربع
+float vertices[] = {
+     0.5f,  0.5f, 0.0f,  // بالا راست
+     0.5f, -0.5f, 0.0f,  // پایین راست
+    -0.5f, -0.5f, 0.0f,  // پایین چپ
+    -0.5f,  0.5f, 0.0f   // بالا چپ
+};
+
+// تعریف شاخص‌ها برای دو مثلث که یک مربع را تشکیل می‌دهند
+unsigned int indices[] = {
+    0, 1, 3,  // مثلث اول
+    1, 2, 3   // مثلث دوم
+};
+
+// ایجاد EBO
+unsigned int EBO;
+glGenBuffers(1, &EBO);
+
+// بایند کردن EBO
+glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+// ترسیم با استفاده از EBO
+// توجه: این کد باید بعد از بایند کردن VAO و شیدر مناسب اجرا شود
+glBindVertexArray(VAO);
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+```
+
+## مثال کامل: ترسیم یک مثلث رنگی
+
+```cpp
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#include <iostream>
+
+// کد شیدر رأس
+const char* vertexShaderSource = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aColor;
+out vec3 ourColor;
+void main()
+{
+    gl_Position = vec4(aPos, 1.0);
+    ourColor = aColor;
+}
+)";
+
+// کد شیدر فرگمنت
+const char* fragmentShaderSource = R"(
+#version 330 core
+in vec3 ourColor;
+out vec4 FragColor;
+void main()
+{
+    FragColor = vec4(ourColor, 1.0);
+}
+)";
+
+int main()
+{
+    // مقداردهی اولیه GLFW و ایجاد پنجره
+    glfwInit();
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Triangle with VBO & VAO", NULL, NULL);
+    glfwMakeContextCurrent(window);
+
+    // مقداردهی اولیه GLAD
+    gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+
+    // کامپایل و لینک شیدرها
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    // تعریف داده‌های رأس
+    float vertices[] = {
+        // موقعیت            // رنگ
+        -0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  // پایین چپ
+         0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  // پایین راست
+         0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f   // بالا
+    };
+
+    // ایجاد و تنظیم VBO و VAO
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    // تنظیم ویژگی موقعیت
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // تنظیم ویژگی رنگ
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // حلقه اصلی رندرینگ
+    while (!glfwWindowShouldClose(window))
+    {
+        // پاک کردن صفحه
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        // ترسیم مثلث
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        // جابجا کردن بافرها و بررسی رویدادها
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    // پاکسازی منابع
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteProgram(shaderProgram);
+
+    glfwTerminate();
+    return 0;
+}
+```
+
+## انواع دستورات ترسیم در OpenGL
+
+### glDrawArrays
+برای ترسیم مستقیم از داده‌های رأس بدون شاخص‌ها استفاده می‌شود:
+
+```cpp
+// ترسیم 3 رأس از شاخص 0 به صورت مثلث‌ها
+glDrawArrays(GL_TRIANGLES, 0, 3);
+```
+
+### glDrawElements
+برای ترسیم با استفاده از شاخص‌ها (EBO) استفاده می‌شود:
+
+```cpp
+// ترسیم 6 شاخص به صورت مثلث‌ها
+glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+```
+
+### حالت‌های ترسیم (یادآوری)
+
+- **GL_POINTS**: هر رأس به صورت یک نقطه ترسیم می‌شود.
+- **GL_LINES**: هر دو رأس متوالی یک خط را تشکیل می‌دهند.
+- **GL_LINE_STRIP**: مجموعه‌ای از خطوط متصل.
+- **GL_LINE_LOOP**: مجموعه‌ای از خطوط متصل که آخرین رأس به اولین رأس متصل می‌شود.
+- **GL_TRIANGLES**: هر سه رأس متوالی یک مثلث را تشکیل می‌دهند.
+- **GL_TRIANGLE_STRIP**: مجموعه‌ای از مثلث‌های متصل.
+- **GL_TRIANGLE_FAN**: مجموعه‌ای از مثلث‌ها که یک رأس مشترک دارند.
+
+## نکات پیشرفته
+
+### استفاده چندگانه از VBO و VAO
+
+می‌توانید چندین VBO را به یک VAO متصل کنید:
+
+```cpp
+// VBO اول - موقعیت‌ها
+glBindBuffer(GL_ARRAY_BUFFER, VBO1);
+glBufferData(GL_ARRAY_BUFFER, sizeof(positions), positions, GL_STATIC_DRAW);
+glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+glEnableVertexAttribArray(0);
+
+// VBO دوم - رنگ‌ها
+glBindBuffer(GL_ARRAY_BUFFER, VBO2);
+glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+glEnableVertexAttribArray(1);
+```
+
+### به‌روزرسانی بافرها
+
+برای به‌روزرسانی بخشی از داده‌ها در یک بافر موجود:
+
+```cpp
+// به‌روزرسانی بخشی از بافر
+glBindBuffer(GL_ARRAY_BUFFER, VBO);
+glBufferSubData(GL_ARRAY_BUFFER, offset, size, data);
+```
+
+## نکات بهینه‌سازی بافر
+
+1. **استفاده از VAO**: همیشه از VAO استفاده کنید، حتی برای یک شیء ساده.
+2. **تنظیم مناسب حالت ذخیره‌سازی**: از GL_STATIC_DRAW برای داده‌های ثابت و GL_DYNAMIC_DRAW برای داده‌های متغیر استفاده کنید.
+3. **ترکیب داده‌ها**: اگر ممکن است، داده‌های مرتبط را در یک VBO ترکیب کنید.
+4. **استفاده از شاخص‌ها**: برای صرفه‌جویی در حافظه، از EBO استفاده کنید.
 
 ## منابع بیشتر
 - [مستندات OpenGL](https://www.opengl.org/documentation/)
