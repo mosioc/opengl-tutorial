@@ -1,8 +1,7 @@
 ---
-title: اوپن‌جی‌ال
+title: OpenGL
 nav_order: 1
-permalink: /opengl/
-layout: persian
+layout: home
 ---
 
 
