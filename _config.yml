@@ -1,8 +1,19 @@
-title: Just the Docs Template
-description: A starter template for a Jeykll site using the Just the Docs theme!
+title: QM QIAU 
+description: Quantum mechanics researchs! 
 theme: just-the-docs
 
 url: https://just-the-docs.github.io
 
+# customize 
+color_scheme: dark
+
+footer_content: "_includes/footer_custom.html"
+
+math: katex
+
+# Aux links for the upper right navigation
 aux_links:
-  Template Repository: https://github.com/just-the-docs/just-the-docs-template
+  "mosioc":
+    - "https://github.com/mosioc"
+
+    
