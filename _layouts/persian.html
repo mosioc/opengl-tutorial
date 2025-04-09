@@ -4,4 +4,19 @@ math: katex
 ---
 <div dir="rtl" lang="fa" style="text-align: right; direction: rtl; unicode-bidi: embed;">
   {{ content }}
-</div> 
+</div>
+
+<style>
+  [dir="rtl"] pre,
+  [dir="rtl"] code,
+  [dir="rtl"] .highlighter-rouge div.highlight {
+    direction: ltr;
+    text-align: left;
+    unicode-bidi: embed;
+  }
+  
+  [dir="rtl"] div.highlighter-rouge {
+    direction: rtl;
+    text-align: left;
+  }
+</style>
