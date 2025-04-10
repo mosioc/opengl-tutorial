@@ -1,7 +1,7 @@
 ---
-title: OpenGL
+title: فهرست
 nav_order: 1
-layout: home
+layout: persian
 ---
 
 ```bash
