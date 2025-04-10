@@ -4,19 +4,19 @@ nav_order: 1
 layout: persian
 ---
 
----
-title: فهرست مطالب
-nav_order: 1
-permalink: /
-layout: persian
----
 # فهرست مطالب
+- [معرفی و راه‌اندازی](setup)
+- [پنجره](window)
+- [اشکال](shapes)
+- [ورودی](./04_input.md)
+- [تبدیلات هندسی](./05_geometric_transformations.md)
+- [انیمیشن](./06_animation.md)
+- [نورپردازی](./07_lighting.md)
+- [شیدرها و بافرها](./08_shaders_and_buffers.md)
+- [بافت‌ها](./09_textures.md)
+- [دوربین](./10_camera.md)
+- [بهینه‌سازی](./11_optimization.md)
+- [رندرینگ](./12_rendering.md)
+- [مدل‌های ۳ بعدی](./13_3d_models.md)
 
-- [معرفی OpenGL و GLUT/FreeGLUT](docs/01-Introduction.md)
-- [راه‌اندازی محیط توسعه](docs/02-Setup.md)
-- [مدیریت پنجره](docs/03-Window.md)
-- [مدیریت ورودی کاربر](docs/05-Input.md)
-- [انیمیشن در OpenGL](docs/07-Animation.md)
-- [شیدرها در OpenGL](docs/09-Shaders.md)
-- [بهینه‌سازی عملکرد](docs/12-Performance_Optimization.md)
-- [تکنیک‌های پیشرفته رندرینگ](docs/13-Advanced_Rendering.md)
+
