@@ -13,6 +13,7 @@ math: katex
     font-family: 'Vazir', 'Tahoma', 'Arial', sans-serif;
   }
   
+  /* حذف نشانگرهای لیست‌ها */
   [dir="rtl"] ul,
   [dir="rtl"] ol {
     list-style-type: none !important;
@@ -32,11 +33,13 @@ math: katex
     margin-bottom: 0.5em !important;
   }
   
+  /* افزودن خط تیره به جای bullet در لیست‌های غیرترتیبی */
   [dir="rtl"] ul li:before {
     content: "- ";
     color: #666;
   }
   
+  /* افزودن شماره‌گذاری دستی برای لیست‌های ترتیبی */
   [dir="rtl"] ol {
     counter-reset: item;
   }
@@ -162,36 +165,24 @@ math: katex
       
       lists.forEach(function(list) {
         list.style.listStyleType = 'none';
-        list.style.paddingRight = '0';
+        list.style.paddingRight = '1em';
         list.style.paddingLeft = '0';
         list.style.marginRight = '1em';
         list.style.marginLeft = '0';
         list.style.textAlign = 'right';
         
         const items = list.querySelectorAll('li');
-        items.forEach(function(item, index) {
+        items.forEach(function(item) {
           item.style.textAlign = 'right';
           item.style.direction = 'rtl';
           item.style.display = 'block';
-          item.style.paddingRight = '1em';
+          item.style.paddingRight = '0'; // Removed padding
           item.style.marginBottom = '0.5em';
           
-          if (list.tagName.toLowerCase() === 'ul') {
-            if (!item.querySelector('.list-marker')) {
-              const marker = document.createElement('span');
-              marker.className = 'list-marker';
-              marker.textContent = '- ';
-              marker.style.color = '#666';
-              item.insertBefore(marker, item.firstChild);
-            }
-          } else if (list.tagName.toLowerCase() === 'ol') {
-            if (!item.querySelector('.list-marker')) {
-              const marker = document.createElement('span');
-              marker.className = 'list-marker';
-              marker.textContent = (index + 1) + '. ';
-              marker.style.color = '#666';
-              item.insertBefore(marker, item.firstChild);
-            }
+          // Remove any existing markers
+          const existingMarker = item.querySelector('.list-marker');
+          if (existingMarker) {
+            existingMarker.remove();
           }
         });
       });
