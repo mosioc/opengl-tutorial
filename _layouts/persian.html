@@ -13,6 +13,26 @@ math: katex
     font-family: 'Vazir', 'Tahoma', 'Arial', sans-serif;
   }
   
+  [dir="rtl"] ul,
+  [dir="rtl"] ol {
+    padding-right: 2em !important;
+    padding-left: 0 !important;
+    margin-right: 1em !important;
+    margin-left: 0 !important;
+    text-align: right !important;
+  }
+  
+  [dir="rtl"] ul li,
+  [dir="rtl"] ol li {
+    text-align: right !important;
+    direction: rtl !important;
+    display: list-item !important;
+  }
+  
+  [dir="rtl"] ul {
+    list-style-position: inside !important;
+  }
+  
   /* Fix for code blocks */
   [dir="rtl"] pre,
   [dir="rtl"] code,
