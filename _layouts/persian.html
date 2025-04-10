@@ -13,7 +13,7 @@ math: katex
     font-family: 'Vazir', 'Tahoma', 'Arial', sans-serif;
   }
   
-
+  /* حذف نشانگرهای لیست‌ها */
   [dir="rtl"] ul,
   [dir="rtl"] ol {
     list-style-type: none !important;
@@ -31,6 +31,11 @@ math: katex
     display: block !important;
     padding-right: 1em !important;
     margin-bottom: 0.5em !important;
+  }
+  
+  [dir="rtl"] ul li:before {
+    content: "- ";
+    color: #666;
   }
 
   
