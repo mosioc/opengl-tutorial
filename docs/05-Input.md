@@ -1,5 +1,5 @@
 ---
-title: ورودی
+title: مدیریت ورودی
 nav_order: 5
 permalink: /input/
 layout: persian
