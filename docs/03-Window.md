@@ -1,5 +1,5 @@
 ---
-title: پنجره
+title: مدیریت پنجره
 nav_order: 3
 permalink: /window/
 layout: persian
