@@ -28,15 +28,13 @@ math: katex
     text-align: left;
   }
   
-  /* Fix for inline code and comments within code blocks */
+  /* Fix for comments within code blocks */
   [dir="rtl"] pre code span.c,
   [dir="rtl"] pre code span.c1,
   [dir="rtl"] pre code span.cm {
-    unicode-bidi: isolate;
-    direction: rtl;
+    unicode-bidi: plaintext;
     text-align: right;
-    display: inline-block;
-    width: 100%;
+    direction: rtl;
   }
   
   /* Fix mixed Persian and English text in comments */
@@ -44,18 +42,23 @@ math: katex
   [dir="rtl"] code span.c1:lang(fa),
   [dir="rtl"] code span.cm:lang(fa) {
     font-family: 'Vazir', monospace;
+    margin-left: auto; /* Remove auto margin to prevent extreme right alignment */
   }
   
-  /* Fix for comment alignment in code blocks */
-  [dir="rtl"] code .comment {
-    unicode-bidi: plaintext;
-    text-align: right;
-    direction: rtl;
-  }
-  
-  /* Ensure line-by-line direction is respected */
+  /* Fix code lines containing comments */
   [dir="rtl"] code .line {
     unicode-bidi: isolate;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+  }
+  
+  /* Fix for comments positioning */
+  [dir="rtl"] code .comment {
+    unicode-bidi: plaintext;
+    direction: rtl;
+    display: inline;
+    text-align: right;
   }
 </style>
 
@@ -73,11 +76,49 @@ math: katex
           comment.setAttribute('lang', 'fa');
           comment.style.direction = 'rtl';
           comment.style.textAlign = 'right';
-          comment.style.display = 'inline-block';
-          comment.style.width = '100%';
-          comment.style.unicodeBidi = 'isolate';
+          comment.style.display = 'inline';
+          comment.style.unicodeBidi = 'plaintext';
+          
+          // Find any parent that might be a line container
+          let lineParent = comment.parentElement;
+          while (lineParent && !lineParent.classList.contains('line') && lineParent !== codeBlock) {
+            lineParent = lineParent.parentElement;
+          }
+          
+          // If we found a line container, add some padding
+          if (lineParent && lineParent !== codeBlock) {
+            if (lineParent.style.display !== 'flex') {
+              lineParent.style.display = 'flex';
+            }
+            comment.style.marginRight = '1em'; // Add some space after code
+          }
         }
       });
+    });
+    
+    // Add a mutation observer to handle dynamic code highlighting
+    const observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.addedNodes.length) {
+          mutation.addedNodes.forEach(function(node) {
+            if (node.nodeType === 1) { // Element node
+              const newComments = node.querySelectorAll('.c, .c1, .cm');
+              newComments.forEach(function(comment) {
+                if (/[\u0600-\u06FF]/.test(comment.textContent)) {
+                  comment.setAttribute('lang', 'fa');
+                  comment.style.direction = 'rtl';
+                  comment.style.textAlign = 'right';
+                }
+              });
+            }
+          });
+        }
+      });
+    });
+    
+    // Start observing code blocks for dynamic changes
+    document.querySelectorAll('pre').forEach(function(pre) {
+      observer.observe(pre, { childList: true, subtree: true });
     });
   });
 </script>
