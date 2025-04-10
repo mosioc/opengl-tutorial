@@ -13,12 +13,14 @@ math: katex
     font-family: 'Vazir', 'Tahoma', 'Arial', sans-serif;
   }
   
+  /* Fix for code blocks */
   [dir="rtl"] pre,
   [dir="rtl"] code,
   [dir="rtl"] .highlighter-rouge div.highlight {
     direction: ltr;
     text-align: left;
-    unicode-bidi: embed;
+    unicode-bidi: isolate;
+    font-family: monospace;
   }
   
   [dir="rtl"] div.highlighter-rouge {
@@ -26,5 +28,56 @@ math: katex
     text-align: left;
   }
   
-
+  /* Fix for inline code and comments within code blocks */
+  [dir="rtl"] pre code span.c,
+  [dir="rtl"] pre code span.c1,
+  [dir="rtl"] pre code span.cm {
+    unicode-bidi: isolate;
+    direction: rtl;
+    text-align: right;
+    display: inline-block;
+    width: 100%;
+  }
+  
+  /* Fix mixed Persian and English text in comments */
+  [dir="rtl"] code span.c:lang(fa),
+  [dir="rtl"] code span.c1:lang(fa),
+  [dir="rtl"] code span.cm:lang(fa) {
+    font-family: 'Vazir', monospace;
+  }
+  
+  /* Fix for comment alignment in code blocks */
+  [dir="rtl"] code .comment {
+    unicode-bidi: plaintext;
+    text-align: right;
+    direction: rtl;
+  }
+  
+  /* Ensure line-by-line direction is respected */
+  [dir="rtl"] code .line {
+    unicode-bidi: isolate;
+  }
 </style>
+
+<script>
+  // Find all code blocks after page load
+  window.addEventListener('DOMContentLoaded', function() {
+    // Fix for comments containing Persian text in code blocks
+    const codeBlocks = document.querySelectorAll('pre code');
+    codeBlocks.forEach(function(codeBlock) {
+      // Find all comment spans
+      const comments = codeBlock.querySelectorAll('.c, .c1, .cm');
+      comments.forEach(function(comment) {
+        // Check if comment contains Persian characters
+        if (/[\u0600-\u06FF]/.test(comment.textContent)) {
+          comment.setAttribute('lang', 'fa');
+          comment.style.direction = 'rtl';
+          comment.style.textAlign = 'right';
+          comment.style.display = 'inline-block';
+          comment.style.width = '100%';
+          comment.style.unicodeBidi = 'isolate';
+        }
+      });
+    });
+  });
+</script>
