@@ -1,7 +1,7 @@
 ---
 title: فهرست
 nav_order: 1
-layout: persian
+layout: home
 ---
 
 ```bash
