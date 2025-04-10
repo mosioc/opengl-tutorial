@@ -14,7 +14,6 @@ math: katex
     font-family: 'Vazir', 'Tahoma', 'Arial', sans-serif;
   }
 
-  /* حذف نشانگرهای لیست‌ها و اضافه کردن استایل سفارشی */
   [dir="rtl"] ul,
   [dir="rtl"] ol {
     list-style: none;
@@ -33,7 +32,6 @@ math: katex
     position: relative;
   }
 
-  /* لیست بدون ترتیب با خط فاصله */
   [dir="rtl"] ul li::before {
     content: "- ";
     color: #666;
@@ -41,7 +39,6 @@ math: katex
     right: 0;
   }
 
-  /* لیست ترتیبی با شماره */
   [dir="rtl"] ol li::before {
     content: counter(item) ". ";
     counter-increment: item;
@@ -50,7 +47,6 @@ math: katex
     right: 0;
   }
 
-  /* کدهای برنامه‌نویسی به صورت LTR */
   [dir="rtl"] pre,
   [dir="rtl"] code,
   [dir="rtl"] .highlighter-rouge div.highlight {
@@ -96,7 +92,7 @@ math: katex
 </style>
 
 <script>
-  // فقط رفع مشکلات کامنت‌های فارسی در بلوک‌های کد
+
   window.addEventListener('DOMContentLoaded', function () {
     const codeBlocks = document.querySelectorAll('pre code');
     codeBlocks.forEach(function (codeBlock) {
