@@ -140,5 +140,27 @@ math: katex
     document.querySelectorAll('pre').forEach(function(pre) {
       observer.observe(pre, { childList: true, subtree: true });
     });
+
+    // Fix RTL list display issues
+    const rtlContainer = document.querySelector('[dir="rtl"]');
+    if (rtlContainer) {
+      const lists = rtlContainer.querySelectorAll('ul, ol');
+      
+      lists.forEach(function(list) {
+        list.style.paddingRight = '2em';
+        list.style.paddingLeft = '0';
+        list.style.marginRight = '1em';
+        list.style.marginLeft = '0';
+        list.style.textAlign = 'right';
+        list.style.listStylePosition = 'outside';
+        
+        const items = list.querySelectorAll('li');
+        items.forEach(function(item) {
+          item.style.textAlign = 'right';
+          item.style.direction = 'rtl';
+          item.style.display = 'list-item';
+        });
+      });
+    }
   });
 </script>
