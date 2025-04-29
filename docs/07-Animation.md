@@ -129,6 +129,198 @@ void update(int value) {
     glutTimerFunc(1, update, 0);
 }
 ```
+## کنترل زمان و انیمیشن با استفاده از glutTimerFunc
+
+در برنامه‌های گرافیکی، مدیریت زمان برای ایجاد انیمیشن روان بسیار مهم است. تابع `glutTimerFunc` یکی از ابزارهای کلیدی GLUT برای این منظور است.
+
+### معرفی glutTimerFunc
+
+```cpp
+void glutTimerFunc(unsigned int msecs, void (*func)(int value), int value);
+```
+
+پارامترها:
+- `msecs`: مدت زمان تأخیر بر حسب میلی‌ثانیه
+- `func`: تابع callback که پس از گذشت زمان فراخوانی می‌شود
+- `value`: مقدار صحیحی که به تابع callback ارسال می‌شود
+
+### نحوه استفاده
+
+برخلاف اکثر توابع callback در GLUT، `glutTimerFunc` فقط یک بار فراخوانی می‌شود. برای ایجاد انیمیشن مداوم، باید تابع را مجدداً در داخل تابع callback فراخوانی کنید:
+
+```cpp
+void update(int value) {
+    // انجام به‌روزرسانی‌ها
+    angle += 1.0f;
+    if (angle > 360.0f) {
+        angle -= 360.0f;
+    }
+    
+    // درخواست رندرینگ مجدد
+    glutPostRedisplay();
+    
+    // برنامه‌ریزی برای فراخوانی مجدد
+    glutTimerFunc(16, update, 0);  // حدود 60 فریم در ثانیه
+}
+
+int main(int argc, char** argv) {
+    // مقداردهی اولیه...
+    
+    // راه‌اندازی تایمر
+    glutTimerFunc(16, update, 0);
+    
+    // حلقه اصلی
+    glutMainLoop();
+    return 0;
+}
+```
+
+### محاسبه FPS (فریم در ثانیه)
+
+برای حفظ سرعت ثابت انیمیشن، می‌توانید FPS را محاسبه و کنترل کنید:
+
+```cpp
+int frameCount = 0;
+int previousTime = 0;
+float fps = 0.0f;
+
+void calculateFPS() {
+    // محاسبه زمان سپری‌شده
+    int currentTime = glutGet(GLUT_ELAPSED_TIME);
+    frameCount++;
+    
+    // به‌روزرسانی FPS هر ثانیه
+    if (currentTime - previousTime >= 1000) {
+        fps = frameCount * 1000.0f / (currentTime - previousTime);
+        previousTime = currentTime;
+        frameCount = 0;
+        printf("FPS: %.2f\n", fps);
+    }
+}
+
+void display() {
+    // رندرینگ...
+    calculateFPS();
+    glutSwapBuffers();
+}
+
+void update(int value) {
+    // به‌روزرسانی‌ها...
+    glutPostRedisplay();
+    glutTimerFunc(16, update, 0);
+}
+```
+
+### انیمیشن مستقل از نرخ فریم
+
+برای انیمیشن‌های روان‌تر که مستقل از نرخ فریم باشند، می‌توانید از زمان واقعی برای محاسبه میزان تغییرات استفاده کنید:
+
+```cpp
+float angle = 0.0f;
+int lastTime = 0;
+
+void update(int value) {
+    // محاسبه زمان سپری‌شده
+    int currentTime = glutGet(GLUT_ELAPSED_TIME);
+    float deltaTime = (currentTime - lastTime) / 1000.0f;  // تبدیل به ثانیه
+    lastTime = currentTime;
+    
+    // به‌روزرسانی با استفاده از deltaTime
+    angle += 90.0f * deltaTime;  // 90 درجه در ثانیه
+    if (angle > 360.0f) {
+        angle -= 360.0f;
+    }
+    
+    glutPostRedisplay();
+    glutTimerFunc(16, update, 0);
+}
+
+int main(int argc, char** argv) {
+    // مقداردهی اولیه...
+    lastTime = glutGet(GLUT_ELAPSED_TIME);
+    glutTimerFunc(16, update, 0);
+    glutMainLoop();
+    return 0;
+}
+```
+
+### مثال کامل: چرخش یک مکعب
+
+```cpp
+float rotationAngle = 0.0f;
+int lastTime = 0;
+
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    gluLookAt(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+    
+    // اعمال چرخش
+    glRotatef(rotationAngle, 0.0f, 1.0f, 0.0f);
+    
+    // رسم مکعب
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glutSolidCube(2.0);
+    
+    glutSwapBuffers();
+}
+
+void update(int value) {
+    // محاسبه زمان سپری‌شده
+    int currentTime = glutGet(GLUT_ELAPSED_TIME);
+    float deltaTime = (currentTime - lastTime) / 1000.0f;
+    lastTime = currentTime;
+    
+    // به‌روزرسانی زاویه چرخش
+    rotationAngle += 45.0f * deltaTime;  // 45 درجه در ثانیه
+    if (rotationAngle > 360.0f) {
+        rotationAngle -= 360.0f;
+    }
+    
+    glutPostRedisplay();
+    glutTimerFunc(16, update, 0);
+}
+
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+    glutInitWindowSize(800, 600);
+    glutCreateWindow("چرخش مکعب");
+    
+    // تنظیمات اولیه
+    glEnable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    // تنظیم پروجکشن
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0f, 800.0f/600.0f, 0.1f, 100.0f);
+    
+    // ثبت توابع callback
+    glutDisplayFunc(display);
+    
+    // راه‌اندازی تایمر
+    lastTime = glutGet(GLUT_ELAPSED_TIME);
+    glutTimerFunc(16, update, 0);
+    
+    glutMainLoop();
+    return 0;
+}
+```
+
+### مقایسه با سایر توابع زمان‌بندی
+
+GLUT چند روش دیگر برای انیمیشن ارائه می‌دهد:
+
+1. **glutIdleFunc**: این تابع را هر زمان که GLUT بیکار باشد فراخوانی می‌کند:
+   ```cpp
+   glutIdleFunc(update);
+   ```
+   مشکل: کنترل دقیقی روی نرخ فریم ندارید و CPU را به شدت اشغال می‌کند.
+
+2. **glutPostRedis
 
 ## تکنیک‌های پیشرفته انیمیشن
 
