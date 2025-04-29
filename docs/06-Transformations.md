@@ -80,6 +80,172 @@ layout: persian
 | 0       0        0  1 |
 ```
 
+## ماتریس‌های تبدیل در OpenGL
+
+در OpenGL، تمام تبدیلات هندسی (مانند انتقال، چرخش و مقیاس) با استفاده از ماتریس‌ها انجام می‌شوند. سیستم ماتریس‌های OpenGL به شما امکان می‌دهد تغییرات هندسی را به صورت متوالی اعمال کنید.
+
+### انواع ماتریس‌ها در OpenGL
+
+OpenGL دارای چندین حالت ماتریس است که هر کدام برای هدف خاصی استفاده می‌شوند:
+
+```cpp
+// انتخاب ماتریس مدل-نما
+glMatrixMode(GL_MODELVIEW);
+
+// انتخاب ماتریس پروجکشن
+glMatrixMode(GL_PROJECTION);
+
+// انتخاب ماتریس بافت
+glMatrixMode(GL_TEXTURE);
+```
+
+هر یک از این حالت‌ها:
+
+1. **GL_MODELVIEW**: برای تبدیلات مدل (شیء) و دوربین استفاده می‌شود.
+2. **GL_PROJECTION**: برای تنظیم نحوه نمایش صحنه سه‌بعدی روی صفحه دوبعدی استفاده می‌شود.
+3. **GL_TEXTURE**: برای تبدیلات مختصات بافت استفاده می‌شود.
+
+### بازنشانی ماتریس با glLoadIdentity
+
+تابع `glLoadIdentity` ماتریس فعلی را به ماتریس همانی (identity matrix) بازنشانی می‌کند:
+
+```cpp
+void glLoadIdentity(void);
+```
+
+ماتریس همانی ماتریسی است که هیچ تغییری روی اشیاء اعمال نمی‌کند، مانند عدد 1 در ضرب اعداد معمولی.
+
+```
+| 1 0 0 0 |
+| 0 1 0 0 |
+| 0 0 1 0 |
+| 0 0 0 1 |
+```
+
+نمونه کاربرد:
+```cpp
+// بازنشانی ماتریس مدل-نما
+glMatrixMode(GL_MODELVIEW);
+glLoadIdentity();
+
+// بازنشانی ماتریس پروجکشن
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+```
+
+### زمان استفاده از glLoadIdentity
+
+1. **شروع رندرینگ هر فریم**: در ابتدای تابع نمایش (display)
+2. **تغییر دیدگاه دوربین**: قبل از تنظیم موقعیت دوربین
+3. **رندرینگ اشیاء مستقل**: برای شروع رندرینگ یک شیء جدید بدون تأثیرپذیری از تبدیلات شیء قبلی
+
+### عملیات ماتریس‌ها
+
+پس از انتخاب ماتریس فعال با `glMatrixMode` و بازنشانی آن با `glLoadIdentity`، می‌توانید عملیات تبدیل را اعمال کنید:
+
+```cpp
+// انتقال
+glTranslatef(x, y, z);
+
+// چرخش (زاویه بر حسب درجه، حول محورهای x، y و z)
+glRotatef(angle, x, y, z);
+
+// مقیاس
+glScalef(x, y, z);
+```
+
+OpenGL این دستورات را به ترتیب اعمال می‌کند و نتیجه را در ماتریس فعلی انباشته می‌کند.
+
+### ذخیره و بازیابی ماتریس
+
+برای نگهداری وضعیت فعلی ماتریس و بازگشت به آن بعد از برخی تغییرات، می‌توانید از پشته ماتریس استفاده کنید:
+
+```cpp
+// ذخیره وضعیت فعلی ماتریس در پشته
+glPushMatrix();
+
+// اعمال برخی تبدیلات...
+glTranslatef(1.0f, 0.0f, 0.0f);
+glRotatef(45.0f, 0.0f, 0.0f, 1.0f);
+
+// رسم اشیاء...
+drawObject();
+
+// بازیابی وضعیت قبلی ماتریس از پشته
+glPopMatrix();
+```
+
+### مثال کاربردی: رندرینگ یک صحنه ساده
+
+```cpp
+void display() {
+    // پاک‌سازی صفحه
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // تنظیم ماتریس پروجکشن
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluPerspective(45.0f, aspectRatio, 0.1f, 100.0f);
+    
+    // تنظیم ماتریس مدل-نما
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    // تنظیم موقعیت دوربین
+    gluLookAt(0.0f, 0.0f, 5.0f,   // موقعیت دوربین
+              0.0f, 0.0f, 0.0f,   // نقطه هدف
+              0.0f, 1.0f, 0.0f);  // بردار بالا
+    
+    // رسم مکعب اول (در مرکز)
+    glPushMatrix();
+    glColor3f(1.0f, 0.0f, 0.0f);  // رنگ قرمز
+    glutSolidCube(1.0);
+    glPopMatrix();
+    
+    // رسم مکعب دوم (سمت راست، چرخیده)
+    glPushMatrix();
+    glTranslatef(2.0f, 0.0f, 0.0f);
+    glRotatef(45.0f, 0.0f, 1.0f, 0.0f);
+    glColor3f(0.0f, 1.0f, 0.0f);  // رنگ سبز
+    glutSolidCube(1.0);
+    glPopMatrix();
+    
+    // رسم مکعب سوم (سمت چپ، مقیاس شده)
+    glPushMatrix();
+    glTranslatef(-2.0f, 0.0f, 0.0f);
+    glScalef(0.5f, 0.5f, 0.5f);
+    glColor3f(0.0f, 0.0f, 1.0f);  // رنگ آبی
+    glutSolidCube(1.0);
+    glPopMatrix();
+    
+    glutSwapBuffers();
+}
+```
+
+### ماتریس پروجکشن و مقایسه با glOrtho2D
+
+دو نوع اصلی تصویرسازی (projection) در OpenGL وجود دارد:
+
+1. **ارتوگرافیک (orthographic)**: بدون دیدگاه پرسپکتیو، خطوط موازی موازی باقی می‌مانند
+   ```cpp
+   glOrtho(left, right, bottom, top, nearVal, farVal);
+   // یا برای 2D
+   gluOrtho2D(left, right, bottom, top);
+   ```
+
+2. **پرسپکتیو (perspective)**: شبیه‌سازی دید چشم انسان، اشیاء دورتر کوچکتر دیده می‌شوند
+   ```cpp
+   gluPerspective(fovy, aspect, zNear, zFar);
+   ```
+
+### نکات پیشرفته
+
+1. **کارایی**: محاسبات ماتریس می‌تواند پرهزینه باشد. سعی کنید تعداد تغییرات ماتریس را به حداقل برسانید.
+
+2. **دقت عددی**: در اعمال تبدیلات متوالی، ممکن است خطاهای عددی تجمع پیدا کند. گاهی نیاز است ماتریس را بازنشانی کنید.
+
+3. **شیدرها**: در OpenGL مدرن، معمولاً عملیات ماتریس در شیدرها با استفاده از کتابخانه‌هایی مانند GLM انجام می‌شود و از API ثابت خودداری می‌شود.
+
 ## کد ماتریس‌های تبدیل
 
 ### 1. ماتریس مدل (Model Matrix)
@@ -591,6 +757,147 @@ int main(int argc, char** argv) {
 }
 ```
 
+## تصویر ارتوگرافیک دوبعدی (Orthographic 2D Projection)
+
+تصویر ارتوگرافیک یا متعامد، روشی برای نمایش اشیاء بدون اعوجاج پرسپکتیو است؛ یعنی خطوط موازی حتی در فواصل دور، موازی باقی می‌مانند. در OpenGL، تابع `gluOrtho2D` روشی ساده برای تنظیم فضای دوبعدی ارتوگرافیک فراهم می‌کند.
+
+### تابع gluOrtho2D
+
+```cpp
+void gluOrtho2D(GLdouble left, GLdouble right, GLdouble bottom, GLdouble top);
+```
+
+پارامترها:
+- `left`, `right`: محدوده افقی (مختصات x)
+- `bottom`, `top`: محدوده عمودی (مختصات y)
+
+این تابع معادل فراخوانی `glOrtho` با مقادیر نزدیک (`near`) -1 و دور (`far`) 1 است:
+```cpp
+glOrtho(left, right, bottom, top, -1, 1);
+```
+
+### نحوه استفاده
+
+معمولاً `gluOrtho2D` در تابع مربوط به تغییر اندازه پنجره یا در زمان راه‌اندازی استفاده می‌شود:
+
+```cpp
+void reshape(int width, int height) {
+    // تنظیم viewport
+    glViewport(0, 0, width, height);
+    
+    // تنظیم ماتریس پروجکشن
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    // تنظیم دستگاه مختصات ارتوگرافیک
+    gluOrtho2D(0, width, 0, height);
+    
+    // بازگشت به ماتریس مدل-نما
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+```
+
+### سیستم‌های مختصات رایج در gluOrtho2D
+
+1. **سیستم مختصات پنجره** (مناسب برای رابط کاربری):
+   ```cpp
+   gluOrtho2D(0, windowWidth, 0, windowHeight);
+   ```
+   در این حالت، مختصات (0,0) در گوشه پایین-چپ و (windowWidth, windowHeight) در گوشه بالا-راست قرار می‌گیرد.
+
+2. **سیستم مختصات نرمال‌شده**:
+   ```cpp
+   gluOrtho2D(-1, 1, -1, 1);
+   ```
+   مختصات از -1 تا 1 در هر دو محور، با (0,0) در مرکز صفحه.
+
+3. **سیستم مختصات با حفظ نسبت تصویر**:
+   ```cpp
+   float aspectRatio = (float)width / (float)height;
+   if (width >= height) {
+       gluOrtho2D(-aspectRatio, aspectRatio, -1, 1);
+   } else {
+       gluOrtho2D(-1, 1, -1/aspectRatio, 1/aspectRatio);
+   }
+   ```
+   این روش از اعوجاج تصاویر هنگام تغییر اندازه پنجره جلوگیری می‌کند.
+
+### مثال: رسم مربع در مرکز
+
+```cpp
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT);
+    
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    
+    // رسم یک مربع در مرکز صفحه
+    glColor3f(1.0f, 0.0f, 0.0f);
+    glBegin(GL_QUADS);
+        glVertex2f(-0.5f, -0.5f);
+        glVertex2f( 0.5f, -0.5f);
+        glVertex2f( 0.5f,  0.5f);
+        glVertex2f(-0.5f,  0.5f);
+    glEnd();
+    
+    glutSwapBuffers();
+}
+
+void init() {
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    gluOrtho2D(-1.0, 1.0, -1.0, 1.0);
+}
+```
+
+### نگاشت مختصات صفحه به مختصات جهان
+
+گاهی نیاز دارید مختصات موس (که در پیکسل است) را به مختصات جهان نگاشت کنید:
+
+```cpp
+void mouseCallback(int x, int y) {
+    // تبدیل مختصات موس به مختصات OpenGL
+    float worldX = (2.0f * x) / windowWidth - 1.0f;
+    float worldY = 1.0f - (2.0f * y) / windowHeight;
+    
+    // اکنون می‌توانید از worldX و worldY استفاده کنید
+    printf("مختصات موس در فضای OpenGL: (%f, %f)\n", worldX, worldY);
+}
+```
+
+### مزایا و محدودیت‌ها
+
+**مزایا**:
+- ساده و سریع برای برنامه‌های دوبعدی
+- مناسب برای رابط کاربری، گرافیک دوبعدی و بازی‌های دوبعدی
+- حفظ اندازه نسبی اشیاء، بدون توجه به فاصله
+
+**محدودیت‌ها**:
+- فاقد عمق و احساس واقعی سه‌بعدی
+- برای نمایش پرسپکتیو مناسب نیست
+- در صورت عدم مدیریت صحیح نسبت تصویر، می‌تواند باعث کشیدگی تصاویر شود
+
+### مقایسه با gluPerspective
+
+برای درک بهتر تفاوت بین تصویر ارتوگرافیک و پرسپکتیو، می‌توان این دو را مقایسه کرد:
+
+```cpp
+// تصویر ارتوگرافیک
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+glOrtho(-5, 5, -5, 5, -10, 10);
+
+// در مقابل تصویر پرسپکتیو
+glMatrixMode(GL_PROJECTION);
+glLoadIdentity();
+gluPerspective(45.0, aspect, 0.1, 100.0);
+```
+
+در حالت ارتوگرافیک، خطوط موازی همیشه موازی می‌مانند، اما در حالت پرسپکتیو، خطوط موازی در فاصله به هم می‌رسند (مانند خطوط ریلی که در افق به هم می‌رسند).
+
 ## نکات مهم
 1. ترتیب اعمال تبدیلات مهم است (جابجایی، چرخش، مقیاس‌بندی)
 2. همیشه قبل از رسم، ماتریس مدل را ریست کنید
@@ -607,4 +914,4 @@ int main(int argc, char** argv) {
 - [کتاب Mathematics for 3D Game Programming and Computer Graphics](https://www.amazon.com/Mathematics-Programming-Computer-Graphics-Development/dp/1435458869)
 - [مقالات GDC درباره تبدیلات و انیمیشن](https://www.gdc.com/)
 - [مستندات GLM](https://github.com/g-truc/glm)
-- [کتاب Real-Time Rendering](https://www.realtimerendering.com/) 
+- [کتاب Real-Time Rendering](https://www.realtimerendering.com/)
