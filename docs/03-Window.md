@@ -70,6 +70,184 @@ void reshape(int w, int h) {
 }
 ```
 
+## تنظیمات Viewport (دید)
+
+در OpenGL، viewport تعیین می‌کند که چه بخشی از پنجره برای رندرینگ استفاده می‌شود. با استفاده از تابع `glViewport` می‌توانید ناحیه نمایش را تنظیم کنید.
+
+### تابع glViewport
+
+```cpp
+void glViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+```
+
+پارامترها:
+- `x, y`: مختصات گوشه پایین-چپ viewport نسبت به پنجره
+- `width, height`: عرض و ارتفاع viewport به پیکسل
+
+### مدیریت تغییر اندازه پنجره
+
+یکی از چالش‌های پنجره‌ها، مدیریت تغییر اندازه آن‌ها است. زمانی که کاربر اندازه پنجره را تغییر می‌دهد، باید viewport را نیز متناسب با آن تنظیم کنید:
+
+```cpp
+void reshapeCallback(int width, int height) {
+    // تنظیم viewport برای تطابق با اندازه جدید پنجره
+    glViewport(0, 0, width, height);
+    
+    // تنظیم ماتریس پروجکشن
+    glMatrixMode(GL_PROJECTION);
+    glLoadIdentity();
+    
+    // حفظ نسبت تصویر (aspect ratio)
+    double aspectRatio = (double)width / (double)height;
+    if (width >= height) {
+        gluOrtho2D(-aspectRatio, aspectRatio, -1.0, 1.0);
+    } else {
+        gluOrtho2D(-1.0, 1.0, -1.0/aspectRatio, 1.0/aspectRatio);
+    }
+    
+    // بازگشت به ماتریس مدل-ویو
+    glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+}
+```
+
+### نکات مهم:
+
+1. **حفظ نسبت تصویر**: بدون تنظیم صحیح نسبت تصویر، اشکال ممکن است هنگام تغییر اندازه پنجره کشیده شوند.
+
+2. **ثبت callback**: این تابع باید با استفاده از `glutReshapeFunc` به عنوان callback تغییر اندازه ثبت شود:
+   ```cpp
+   glutReshapeFunc(reshapeCallback);
+   ```
+
+3. **زمان‌بندی**: تابع `glViewport` معمولاً در تابع reshape فراخوانی می‌شود، اما می‌توانید در هر زمانی آن را فراخوانی کنید تا ناحیه رندرینگ را تغییر دهید.
+
+### مثال کاربردی: چندین viewport
+
+گاهی ممکن است بخواهید چندین viewport در یک پنجره داشته باشید (مثلاً برای نمایش یک شیء از چندین زاویه):
+
+```cpp
+void display() {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // viewport بالا-چپ (نمای بالا)
+    glViewport(0, height/2, width/2, height/2);
+    drawObjectTopView();
+    
+    // viewport بالا-راست (نمای جلو)
+    glViewport(width/2, height/2, width/2, height/2);
+    drawObjectFrontView();
+    
+    // viewport پایین-چپ (نمای کنار)
+    glViewport(0, 0, width/2, height/2);
+    drawObjectSideView();
+    
+    // viewport پایین-راست (نمای پرسپکتیو)
+    glViewport(width/2, 0, width/2, height/2);
+    drawObjectPerspectiveView();
+    
+    glutSwapBuffers();
+}
+```
+
+## پرچم‌های نمایش (Display Flags)
+
+در زمان ایجاد پنجره در OpenGL با GLUT، می‌توانید رفتار و ویژگی‌های پنجره را با پرچم‌های نمایش مختلف تعیین کنید. این پرچم‌ها به تابع `glutInitDisplayMode` ارسال می‌شوند.
+
+### پرچم‌های پایه
+
+```cpp
+glutInitDisplayMode(GLUT_RGBA | GLUT_DOUBLE | GLUT_DEPTH);
+```
+
+پرچم‌های اصلی:
+
+| پرچم | توضیح |
+| --- | --- |
+| `GLUT_RGB` یا `GLUT_RGBA` | استفاده از مدل رنگ RGB (یا RGBA با کانال آلفا) |
+| `GLUT_INDEX` | استفاده از مدل رنگ indexed color (کمتر استفاده می‌شود) |
+| `GLUT_SINGLE` | استفاده از یک بافر نمایش |
+| `GLUT_DOUBLE` | استفاده از بافر دوگانه برای انیمیشن روان‌تر |
+| `GLUT_DEPTH` | فعال‌سازی بافر عمق برای رندرینگ سه‌بعدی |
+| `GLUT_STENCIL` | فعال‌سازی بافر استنسیل برای جلوه‌های خاص |
+| `GLUT_ACCUM` | فعال‌سازی بافر انباشت برای جلوه‌های پیشرفته |
+
+### انتخاب بافر مناسب
+
+انتخاب صحیح بافرها بر کارایی و کیفیت تصویر تأثیر مستقیم دارد:
+
+1. **بافر دوگانه (Double Buffer)**:
+   برای برنامه‌های با انیمیشن، معمولاً از بافر دوگانه استفاده می‌شود تا از پدیده تیرگی (flickering) جلوگیری شود:
+   ```cpp
+   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+   // در انتهای تابع display:
+   glutSwapBuffers();
+   ```
+
+2. **بافر عمق (Depth Buffer)**:
+   برای رندرینگ صحیح اشیاء سه‌بعدی ضروری است:
+   ```cpp
+   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
+   // و در تابع display یا init:
+   glEnable(GL_DEPTH_TEST);
+   ```
+
+3. **بافر استنسیل (Stencil Buffer)**:
+   برای جلوه‌های خاص مانند سایه‌ها، انعکاس‌ها و برش‌ها:
+   ```cpp
+   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL);
+   ```
+
+### تنظیم وضوح رنگ
+
+برای تنظیم جزئیات بیشتر، می‌توانید از توابع اضافی استفاده کنید:
+
+```cpp
+// تنظیم وضوح رنگ (معمولاً قبل از glutInit)
+glutInitDisplayString("rgba=8 depth=16 double");
+```
+
+این روش انعطاف‌پذیری بیشتری نسبت به `glutInitDisplayMode` فراهم می‌کند.
+
+### مثال کامل
+
+```cpp
+int main(int argc, char** argv) {
+    glutInit(&argc, argv);
+    
+    // درخواست بافر دوگانه، رنگ RGBA و بافر عمق
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
+    
+    // تنظیم موقعیت و اندازه پنجره
+    glutInitWindowPosition(100, 100);
+    glutInitWindowSize(800, 600);
+    
+    // ایجاد پنجره با عنوان مشخص
+    glutCreateWindow("برنامه OpenGL من");
+    
+    // فعال‌سازی تست عمق
+    glEnable(GL_DEPTH_TEST);
+    
+    // تنظیم توابع callback
+    glutDisplayFunc(display);
+    glutReshapeFunc(reshape);
+    
+    // شروع حلقه اصلی
+    glutMainLoop();
+    
+    return 0;
+}
+```
+
+### نکات پیشرفته
+
+- **بافر نمونه‌برداری چندگانه (Multisampling)**: برای آنتی‌آلیاسینگ (anti-aliasing) می‌توانید از `GLUT_MULTISAMPLE` استفاده کنید.
+- **سازگاری با سیستم‌عامل**: برخی ترکیبات بافر ممکن است در تمام سیستم‌ها پشتیبانی نشوند، بنابراین همیشه باید آماده مدیریت خطاها باشید.
+- **بهینه‌سازی**: تنها بافرهایی را فعال کنید که واقعاً به آن‌ها نیاز دارید تا از مصرف بی‌جهت حافظه جلوگیری شود.
+
+
+
+
 ## ویژگی‌های پیشرفته پنجره
 
 ### 1. حالت‌های نمایش
@@ -252,4 +430,4 @@ int main(int argc, char** argv) {
 - [مستندات GLUT](https://www.opengl.org/resources/libraries/glut/)
 - [OpenGL Window Management](https://www.khronos.org/opengl/wiki/Creating_an_OpenGL_Context)
 - [GLUT Programming Guide](https://www.opengl.org/archives/resources/code/samples/glut_examples/examples/redbook/)
-- [مقالات آکادمیک SIGGRAPH](https://www.siggraph.org/) 
+- [مقالات آکادمیک SIGGRAPH](https://www.siggraph.org/)
