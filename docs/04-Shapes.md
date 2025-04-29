@@ -195,6 +195,113 @@ void saveAndRestoreMatrix() {
     glPopMatrix();   // بازیابی ماتریس ذخیره شده
 }
 ```
+
+## پاک‌سازی و آماده‌سازی صفحه نمایش
+
+قبل از رندرینگ هر فریم، باید صفحه نمایش را پاک کرده و برای رندرینگ آماده کنید. در OpenGL این کار با توابع `glClearColor` و `glClear` انجام می‌شود.
+
+### تنظیم رنگ پس‌زمینه با glClearColor
+
+تابع `glClearColor` رنگ پس‌زمینه‌ای را تعیین می‌کند که هنگام پاک‌سازی صفحه استفاده می‌شود:
+
+```cpp
+void glClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+```
+
+پارامترها:
+- `red`, `green`, `blue`: مؤلفه‌های رنگی در محدوده 0.0 تا 1.0
+- `alpha`: شفافیت در محدوده 0.0 (کاملاً شفاف) تا 1.0 (کاملاً مات)
+
+مثال‌های کاربردی:
+```cpp
+// تنظیم پس‌زمینه سیاه
+glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+// تنظیم پس‌زمینه سفید
+glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+// تنظیم پس‌زمینه آبی آسمانی
+glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
+
+// تنظیم پس‌زمینه خاکستری
+glClearColor(0.5f, 0.5f, 0.5f, 1.0f);
+```
+
+### پاک‌سازی بافرها با glClear
+
+تابع `glClear` بافرهای مشخص‌شده را با مقادیر پیش‌فرض پاک می‌کند:
+
+```cpp
+void glClear(GLbitfield mask);
+```
+
+پارامتر `mask` ترکیبی از یک یا چند پرچم است که مشخص می‌کند کدام بافرها باید پاک شوند:
+
+| پرچم | توضیح |
+| --- | --- |
+| `GL_COLOR_BUFFER_BIT` | بافر رنگ (پاک‌سازی با رنگ تنظیم‌شده در `glClearColor`) |
+| `GL_DEPTH_BUFFER_BIT` | بافر عمق (پاک‌سازی با مقدار تنظیم‌شده در `glClearDepth`) |
+| `GL_STENCIL_BUFFER_BIT` | بافر استنسیل (پاک‌سازی با مقدار تنظیم‌شده در `glClearStencil`) |
+| `GL_ACCUM_BUFFER_BIT` | بافر انباشت (پاک‌سازی با مقدار تنظیم‌شده در `glClearAccum`) |
+
+مثال‌های کاربردی:
+```cpp
+// پاک‌سازی فقط بافر رنگ
+glClear(GL_COLOR_BUFFER_BIT);
+
+// پاک‌سازی بافر رنگ و عمق (معمول در رندرینگ سه‌بعدی)
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+// پاک‌سازی همه بافرهای اصلی
+glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+```
+
+### تنظیمات تکمیلی
+
+برای کنترل بیشتر بر روی عملیات پاک‌سازی، می‌توانید از این توابع استفاده کنید:
+
+```cpp
+// تنظیم مقدار پیش‌فرض بافر عمق (بین 0.0 تا 1.0، پیش‌فرض 1.0)
+glClearDepth(1.0);
+
+// تنظیم مقدار پیش‌فرض بافر استنسیل (عدد صحیح، پیش‌فرض 0)
+glClearStencil(0);
+
+// تنظیم مقدار پیش‌فرض بافر انباشت
+glClearAccum(0.0f, 0.0f, 0.0f, 0.0f);
+```
+
+### کارایی و بهینه‌سازی
+
+- **عملیات پرهزینه**: پاک‌سازی بافرها می‌تواند عملیات نسبتاً سنگینی باشد، خصوصاً در وضوح‌های بالا.
+- **تکنیک Scissor**: می‌توانید با استفاده از `glScissor` فقط بخشی از صفحه را پاک کنید:
+  ```cpp
+  glEnable(GL_SCISSOR_TEST);
+  glScissor(x, y, width, height);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glDisable(GL_SCISSOR_TEST);
+  ```
+- **بهینه‌سازی عملکرد**: در برخی سناریوها، ممکن است بتوانید از پاک‌سازی هر فریم صرف‌نظر کنید (مثلاً اگر کل صفحه با محتوای جدید روی آن رسم می‌شود).
+
+### یک مثال کامل
+
+```cpp
+void display() {
+    // تنظیم رنگ پس‌زمینه به آبی تیره
+    glClearColor(0.0f, 0.1f, 0.2f, 1.0f);
+    
+    // پاک‌سازی بافر رنگ و عمق
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    
+    // رسم اشکال...
+    drawScene();
+    
+    // تعویض بافرهای جلو و عقب
+    glutSwapBuffers();
+}
+```
+
+
 ## کد نمونه کامل
 
 ```cpp
@@ -315,4 +422,4 @@ int main(int argc, char** argv) {
 - [OpenGL Primitives](https://www.khronos.org/opengl/wiki/Primitive)
 - [OpenGL Transformations](https://www.khronos.org/opengl/wiki/Transformations)
 - [مقالات آکادمیک SIGGRAPH](https://www.siggraph.org/)
-- [کتاب OpenGL Programming Guide (Red Book)](https://www.opengl.org/archives/resources/code/samples/glut_examples/examples/redbook/) 
+- [کتاب OpenGL Programming Guide (Red Book)](https://www.opengl.org/archives/resources/code/samples/glut_examples/examples/redbook/)
